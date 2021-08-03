@@ -1,5 +1,5 @@
 terraform {
-    required_providers{
+    required_providers {
         aws = {
             source = "hashicorp/aws"
             version = "~> 3.0"
@@ -9,7 +9,7 @@ terraform {
 
 #configure the AWS Provider
 provider "aws" {
-    region = "us-east-1"
+    region = var.region
 }
 
 #resources
@@ -104,7 +104,7 @@ resource "aws_lb" "supermario" {
   subnets            = aws_subnet.subnet_public.*.id
   
   tags = {
-    Environment = "production"
+    "Environment" = var.environment_tag
   }
 }
 
@@ -149,7 +149,7 @@ resource "aws_instance" "supermario_instance" {
 # Executing ansible playbook
 resource "null_resource" "run-ansible-playbook" {
   provisioner "local-exec" {
-    command = "ansible-playbook -i hosts main.yml"
+    command = "ansible-playbook -T 300 main.yml"
   }
   # Run after aws autoscaling group is ready
   depends_on = [aws_instance.supermario_instance]

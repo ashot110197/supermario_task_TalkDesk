@@ -7,3 +7,7 @@ resource "local_file" "AnsibleInventory" {
  )
  filename = "hosts"
 }
+
+output "lb_pub_dns" {
+   value = aws_lb.supermario.dns_name
+}
