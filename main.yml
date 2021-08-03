@@ -1,0 +1,45 @@
+---
+- hosts: all
+  become: true
+  tasks:
+  - name: 'Install python2'
+    raw: sudo apt-get -y install python
+    
+  - name: Wait for sudo
+    become: yes
+    shell:  while sudo fuser /var/lib/dpkg/lock >/dev/null 2>&1; do sleep 5; done;
+
+  - name: run apt-get update and install python
+    raw: "{{ item }}"
+    loop:
+      - sudo apt-get update
+
+  - name: Install required system packages
+    apt: name={{ item }} state=latest update_cache=yes
+    loop: [ 'apt-transport-https', 'ca-certificates', 'curl', 'software-properties-common', 'python-pip', 'python3-pip', 'virtualenv', 'python3-setuptools']
+    
+  - name: Install aptitude using apt
+    apt: name=aptitude state=latest update_cache=yes force_apt_get=yes
+
+  - name: Add Docker GPG apt Key
+    apt_key:
+      url: https://download.docker.com/linux/ubuntu/gpg
+      state: present
+
+  - name: Add Docker Repository
+    apt_repository:
+      repo: deb https://download.docker.com/linux/ubuntu bionic stable
+      state: present
+
+  - name: Update apt and install docker-ce
+    apt: update_cache=yes name=docker-ce state=latest
+
+  - name: Install Docker Module for Python
+    pip:
+      name: docker
+
+  - name: Pull the Docker image
+    command: docker pull bharathshetty4/supermario
+
+  - name: Create a container and run
+    command: docker run -d --restart always -p 80:8080 bharathshetty4/supermario
